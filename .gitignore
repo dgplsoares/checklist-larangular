@@ -1,0 +1,46 @@
+# ─────────────────────────────────────────────────────────────
+# .gitignore — raiz do repositório (monorepo Laravel + Angular)
+#
+# backend/ (Laravel) e frontend/ (Angular) têm seus PRÓPRIOS
+# .gitignore, que já cobrem vendor/, node_modules/, .env, dist/,
+# caches, etc. — cada um relativo à sua pasta.
+#
+# Este arquivo cobre só o NÍVEL DA RAIZ e itens TRANSVERSAIS
+# (SO, editores, logs) que podem surgir em qualquer diretório e
+# que os .gitignore filhos não pegam.
+# ─────────────────────────────────────────────────────────────
+
+# --- Sistema operacional (qualquer nível) ---
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# --- Editores / IDEs ---
+.idea/
+.fleet/
+.nova/
+.zed/
+.history/
+*.swp
+*.swo
+*~
+
+# --- Logs ---
+*.log
+
+# --- Ambiente na raiz (cada subprojeto já ignora o seu) ---
+/.env
+/.env.*
+!/.env.example
+
+# --- Dependências na raiz (defensivo; vivem em backend/ e frontend/) ---
+/vendor/
+/node_modules/
+
+# --- Claude Code: apenas as configs locais da máquina ---
+# O restante de .claude/ (docs, protocolo, decisões) é versionado de propósito.
+.claude/settings.local.json
