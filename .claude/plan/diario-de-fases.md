@@ -55,7 +55,7 @@
 - `npm audit`: 73 vulnerabilidades (deps transitivas do Angular 17.3) — revisar no README (próximos passos).
 - **Achados fechados:** Angular 1–8.
 
-## Fase 3 — Infra / DX / CI  [em andamento]
+## Fase 3 — Infra / DX / CI  [concluída]
 
 **Reanálise pré-fase:** `docker-compose.yml` com `version` obsoleto e path descasado nos **dois** serviços (laravel `/backend`≠`/var/www`; angular `/frontend`≠`/app` — gêmeo do Infra 1, não documentado no achado). Sem `.github`. Pint disponível; a Fase 1 já resolveu `pdo_sqlite` + `phpunit.xml` (DB `:memory:`).
 
@@ -65,3 +65,9 @@
 - Entrypoint roda como root → arquivos root-owned (ok pro avaliador; dev usa `docker compose run` + chown).
 
 **Mini-roadmap:** (1) docker path coerente + `docker-entrypoint.sh` + verificar `up --build`; (2) CI GitHub Actions (backend + frontend) + `karma.conf.js` (`ChromeHeadlessCI`); (3) Pint (Prettier/ESLint opcional). Tracking detalhado na Fase 3 do `roadmap-master.md`.
+
+**Progresso/fechamento:**
+- **B1:** `docker compose up --build` verificado (entrypoint roda, back+front conectados, hot-reload) → **Infra 1 fechado**. Imagens viraram ambiente puro; código+deps vêm do volume + entrypoint/command (evita o double-install que o mount causava).
+- **B2:** CI GitHub Actions **verde** (backend `php artisan test`; frontend `ng test` via `karma.conf.js`/`ChromeHeadlessCI` + `ng build`). Descoberta: o builder do Angular 17 não auto-carrega `karma.conf.js` → precisa `karmaConfig` no `angular.json`.
+- **B3:** Pint = 36 files clean (código já no padrão) → gate `pint --test` adicionado ao CI. CI verde no push (run 29068738287).
+- Prettier/ESLint no front: deixado como **próximos passos** (right-sizing). Aviso do CI sobre `checkout@v4`/Node 20 é cosmético.
