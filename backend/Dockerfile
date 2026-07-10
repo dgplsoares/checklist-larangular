@@ -1,18 +1,12 @@
 FROM php:8.3-fpm
 
-# Instalar dependências do sistema
+# Extensões e utilitários do sistema (pdo_sqlite é obrigatório para o SQLite).
 RUN apt-get update && apt-get install -y \
     libzip-dev zip unzip git curl libpng-dev libsqlite3-dev \
     && docker-php-ext-install zip pdo pdo_mysql pdo_sqlite
 
-# Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Definir diretório
-WORKDIR /backend
+WORKDIR /var/www
 
-COPY . .
-
-RUN composer install
-
-CMD ["php-fpm"]
+# O código e as dependências vêm do volume + docker-entrypoint.sh (ver docker-compose.yml).
