@@ -49,7 +49,7 @@ Refactor **contract-first horizontal** (DEC-003): estabiliza-se o backend inteir
 - [x] `[cmd]` `php artisan migrate` (cria a tabela `tarefas` no `database/database.sqlite`).
 - [x] `[teste]` `tests/Feature/TarefaTest.php` com `RefreshDatabase`: index (200 + estrutura), store válido (201 + `assertDatabaseHas`), store sem title (422 em `title`), update/PUT (200 + title alterado), toggle PATCH (200 + boolean invertido no BD), destroy (204 + `assertDatabaseMissing`), destroy inexistente (404). Remover os `ExampleTest` (Feature e Unit) do scaffold — o Feature faz `GET '/'` e quebraria no CI api-only.
 - [x] `[teste]` `php artisan test` — suite verde (incluindo 422 e 404).
-- [ ] `[verificação]` Smoke manual (`php artisan serve` + curl + preflight OPTIONS/CORS) — **deferido à Fase 5 (E2E)**. Os status 200/201/422/404/204 + PATCH toggle já ficam provados pelos feature tests acima; a origem restrita do CORS (não `*`) é revalidada no gate E2E da Fase 5.
+- [x] `[verificação]` Smoke manual (`php artisan serve` + curl + preflight OPTIONS/CORS) — **deferido à Fase 5 (E2E)**. Os status 200/201/422/404/204 + PATCH toggle já ficam provados pelos feature tests acima; a origem restrita do CORS (não `*`) é revalidada no gate E2E da Fase 5.
 
 **Comandos a executar:** `composer install` · `cp .env.example .env` · `php artisan key:generate` · `touch database/database.sqlite` · `php artisan install:api --force --without-migration-prompt` · `php artisan make:model Tarefa -mf` · `php artisan make:request StoreTarefaRequest` · `php artisan make:request UpdateTarefaRequest` · `php artisan make:resource TarefaResource` · `php artisan make:controller TarefaController --api --model=Tarefa` · `php artisan config:publish cors` · `git rm app/Http/Middleware/CorsMiddleware.php` · `git rm storage/tarefas.json` · `php artisan migrate` · `php artisan test`
 
@@ -136,8 +136,8 @@ Refactor **contract-first horizontal** (DEC-003): estabiliza-se o backend inteir
 - [x] `[edição]` Seção **Como rodar**: Docker (`docker compose up --build`, portas 4200/8000, `docker compose exec laravel php artisan migrate`, URL `/api/tarefas`) e Local (backend: `cp .env.example .env` → `composer install` → `php artisan key:generate` → **`touch database/database.sqlite`** → `php artisan migrate` → `php artisan serve`; frontend: `npm install` → `npm start`). Testes: `php artisan test` e `npm test`. Apontar a URL **`/api/tarefas`** (não a antiga `/tarefas`).
 - [x] `[edição]` Seção **Uso de IA + SDD**: método rastreável (análise → plano → decisões → implementação → verificação) apontando para `.claude/` (protocols/plan/decisions/docs); sem co-autoria por commit (dev-protocol §4).
 - [x] `[edição]` Seção **Próximos passos / evolução**: multi-tenant, filas/jobs, auth real com Sanctum (instalado e ocioso — só ligar), banco gerenciado (MySQL/Postgres, DEC-001) — redigidos como evolução **não** entregue.
-- [ ] `[verificação]` Dogfood Docker de clone limpo: seguir **só** o README na via Docker; CRUD + toggle + responsivo (desktop e mobile). Conferir também o path do serviço angular (hot-reload).
-- [ ] `[teste]` Dogfood local: seguir o passo a passo local + rodar `php artisan test` e `npm test` verdes.
+- [x] `[verificação]` Dogfood Docker de clone limpo: seguir **só** o README na via Docker; CRUD + toggle + responsivo (desktop e mobile). Conferir também o path do serviço angular (hot-reload).
+- [x] `[teste]` Dogfood local: seguir o passo a passo local + rodar `php artisan test` e `npm test` verdes.
 - [x] `[verificação]` Revisão final: precisão de versão; zero menção a empresas/projetos externos; conteúdo puramente técnico; links internos válidos; markdown renderiza.
 - [x] `[edição]` Registrar as descobertas no `.claude/plan/diario-de-fases.md`.
 
@@ -163,21 +163,21 @@ Refactor **contract-first horizontal** (DEC-003): estabiliza-se o backend inteir
 **Achados cobertos:** nenhum novo. Revalida em conjunto L1–L7, A1–A8 e Infra 1; exercita explicitamente **L4** (concluir via PATCH), **L7** (CORS restrito, não `*`), **A6** (estado vazio `@empty`), **A7** (320px) e **A8** (erro real).
 
 **Tarefas:**
-- [ ] `[verificação]` Working tree limpo; Fases 1–4 mergeadas na branch de entrega; nenhum `storage/tarefas.json` remanescente (`git status`, `git log --oneline`).
-- [ ] `[cmd]` Do zero: `docker compose down -v` + **`docker compose up -d --build`** (`-d` é necessário para os `exec` seguintes). Confirmar laravel `:8000` e angular `:4200` up, paths em `/var/www` e `/app`; `curl -i http://localhost:8000/api/tarefas` → 200.
-- [ ] `[cmd]` Banco no container: `docker compose exec laravel php artisan migrate --force`; GET vem do SQLite (Eloquent). **Nota:** o entrypoint deve fazer isso no boot para o clone hands-off da tarefa de reprodutibilidade.
-- [ ] `[verificação]` Smoke API via curl: GET (200), POST válido (201), POST sem title (422), PATCH toggle (200), DELETE existente (204), DELETE inexistente (404). **Preflight OPTIONS: `Access-Control-Allow-Origin` = `http://localhost:4200` (NÃO `*`) e `PATCH` em `allowed_methods`** — cerne do achado L7.
-- [ ] `[verificação]` E2E UI desktop (`:4200`) vs. backend real: (a) listar; (b) criar + persiste após reload; (c) validação 422 no título vazio; (d) **concluir via checkbox/PATCH persiste após reload (gap L4)**; (e) remover; (f) **remover todas → aparece o estado vazio `@empty` (A6)**.
-- [ ] `[verificação]` Erro real (A8): `docker compose stop laravel`, agir na UI → mensagem de erro/retry, **sem** dados fake ("offline"/`fakeTodo`); `docker compose start laravel` → retry restaura os dados reais.
-- [ ] `[verificação]` Responsividade (A7): DevTools ~320px sem overflow horizontal, controles clicáveis e texto legível; repetir ~768px.
-- [ ] `[teste]` `docker compose exec laravel php artisan test` — verde (sqlite `:memory:`).
-- [ ] `[teste]` Suite do front headless. **Nota:** o serviço `angular` (node:20) **não** tem Chrome — ou instalar `chromium` no `frontend/Dockerfile` + `CHROME_BIN` + launcher `ChromeHeadlessNoSandbox` (`--no-sandbox --disable-gpu`), ou rodar a suite no host/CI (onde há browser). `docker compose exec angular npm test …` só funciona se o browser estiver no container.
-- [ ] `[verificação]` CI verde no commit de entrega (`gh run list`, `gh run view <id>`) — jobs backend e frontend `success`.
-- [ ] `[verificação]` Histórico de commits semânticos (Conventional Commits: feat/refactor/fix/test/chore/docs), coeso por fase/achado, sem `wip`/lixo.
-- [ ] `[edição]` Finalizar o README (estado final, não o texto do teste).
-- [ ] `[cmd]` **Commit do README + push + AGUARDAR CI verde** — antes do clone da tarefa seguinte (senão o clone pega um remote sem o README final e a publicação sai sem CI verde no commit de entrega).
-- [ ] `[verificação]` Reprodutibilidade do zero: `gh repo clone` em tmp limpo + `docker compose up --build` sem arquivos extras → sobe e `GET /api/tarefas` responde. Depende do entrypoint fazer `cp .env.example .env` + `key:generate` + `touch sqlite` + `migrate` no boot (nada de estado não versionado).
-- [ ] `[cmd]` Tornar público: conferir que `.env`/`APP_KEY` **não** estão versionados (`.gitignore` + histórico); `gh repo edit --visibility public --accept-visibility-change-consequences`; validar o link.
+- [x] `[verificação]` Working tree limpo; Fases 1–4 mergeadas na branch de entrega; nenhum `storage/tarefas.json` remanescente (`git status`, `git log --oneline`).
+- [x] `[cmd]` Do zero: `docker compose down -v` + **`docker compose up -d --build`** (`-d` é necessário para os `exec` seguintes). Confirmar laravel `:8000` e angular `:4200` up, paths em `/var/www` e `/app`; `curl -i http://localhost:8000/api/tarefas` → 200.
+- [x] `[cmd]` Banco no container: `docker compose exec laravel php artisan migrate --force`; GET vem do SQLite (Eloquent). **Nota:** o entrypoint deve fazer isso no boot para o clone hands-off da tarefa de reprodutibilidade.
+- [x] `[verificação]` Smoke API via curl: GET (200), POST válido (201), POST sem title (422), PATCH toggle (200), DELETE existente (204), DELETE inexistente (404). **Preflight OPTIONS: `Access-Control-Allow-Origin` = `http://localhost:4200` (NÃO `*`) e `PATCH` em `allowed_methods`** — cerne do achado L7.
+- [x] `[verificação]` E2E UI desktop (`:4200`) vs. backend real: (a) listar; (b) criar + persiste após reload; (c) validação 422 no título vazio; (d) **concluir via checkbox/PATCH persiste após reload (gap L4)**; (e) remover; (f) **remover todas → aparece o estado vazio `@empty` (A6)**.
+- [x] `[verificação]` Erro real (A8): `docker compose stop laravel`, agir na UI → mensagem de erro/retry, **sem** dados fake ("offline"/`fakeTodo`); `docker compose start laravel` → retry restaura os dados reais.
+- [x] `[verificação]` Responsividade (A7): DevTools ~320px sem overflow horizontal, controles clicáveis e texto legível; repetir ~768px.
+- [x] `[teste]` `docker compose exec laravel php artisan test` — verde (sqlite `:memory:`).
+- [x] `[teste]` Suite do front headless. **Nota:** o serviço `angular` (node:20) **não** tem Chrome — ou instalar `chromium` no `frontend/Dockerfile` + `CHROME_BIN` + launcher `ChromeHeadlessNoSandbox` (`--no-sandbox --disable-gpu`), ou rodar a suite no host/CI (onde há browser). `docker compose exec angular npm test …` só funciona se o browser estiver no container.
+- [x] `[verificação]` CI verde no commit de entrega (`gh run list`, `gh run view <id>`) — jobs backend e frontend `success`.
+- [x] `[verificação]` Histórico de commits semânticos (Conventional Commits: feat/refactor/fix/test/chore/docs), coeso por fase/achado, sem `wip`/lixo.
+- [x] `[edição]` Finalizar o README (estado final, não o texto do teste).
+- [x] `[cmd]` **Commit do README + push + AGUARDAR CI verde** — antes do clone da tarefa seguinte (senão o clone pega um remote sem o README final e a publicação sai sem CI verde no commit de entrega).
+- [x] `[verificação]` Reprodutibilidade do zero: `gh repo clone` em tmp limpo + `docker compose up --build` sem arquivos extras → sobe e `GET /api/tarefas` responde. Depende do entrypoint fazer `cp .env.example .env` + `key:generate` + `touch sqlite` + `migrate` no boot (nada de estado não versionado).
+- [x] `[cmd]` Tornar público: conferir que `.env`/`APP_KEY` **não** estão versionados (`.gitignore` + histórico); `gh repo edit --visibility public --accept-visibility-change-consequences`; validar o link.
 
 **Comandos a executar:** `docker compose down -v` · `docker compose up -d --build` · `docker compose exec laravel php artisan migrate --force` · `docker compose exec laravel php artisan test` · (suite do front onde há browser) · `gh run list` · `git log --oneline --graph` · `gh repo edit --visibility public --accept-visibility-change-consequences`
 
@@ -197,14 +197,14 @@ Refactor **contract-first horizontal** (DEC-003): estabiliza-se o backend inteir
 
 ## Definição de pronto (global)
 
-- [ ] **Os 16 achados** (Laravel 1–7, Angular 1–8, Infra 1) corrigidos no código e comprovados na tabela antes→depois do README.
-- [ ] Backend: `/api/tarefas` via `apiResource` + `TarefaController` fino + FormRequests (422) + `TarefaResource` + Model Eloquent/SQLite; 404 por Route Model Binding; `HandleCors` nativo restrito a `http://localhost:4200`; `storage/tarefas.json` e `CorsMiddleware` custom removidos.
-- [ ] Frontend: `interface Todo` em todo o fluxo (zero `any`); `TodoService` tipado; `provideHttpClient(withFetch())`; environments; componentização + signals imutáveis + OnPush + `inject()` + `takeUntilDestroyed`; `@if/@for` (track) + `@empty`; SCSS responsivo mobile-first; erro real (loading/erro/vazio) **sem** dados fake.
-- [ ] Infra: docker path coerente (`/var/www`, `/app`) com hot-reload; `pdo_sqlite` compilado; CI verde (backend + frontend) no commit de entrega; Pint `--test` verde.
-- [ ] Testes woven verdes: PHPUnit Feature (CRUD + 422 + 404 + toggle) e specs Angular (TodoService via HttpTestingController + 1 componente).
-- [ ] E2E manual do gate final passa (persistência, erro real, 320px, CORS restrito, `@empty`).
-- [ ] README completo e verdadeiro (dogfood de clone limpo); `DECISIONS.md` reconciliado; diário atualizado; commits semânticos; repositório público sem segredos.
-- [ ] App funcionando ao fim de **cada** fase (por camada quando a integração no navegador estiver temporariamente vermelha entre Fase 1 e Fase 2).
+- [x] **Os 16 achados** (Laravel 1–7, Angular 1–8, Infra 1) corrigidos no código e comprovados na tabela antes→depois do README.
+- [x] Backend: `/api/tarefas` via `apiResource` + `TarefaController` fino + FormRequests (422) + `TarefaResource` + Model Eloquent/SQLite; 404 por Route Model Binding; `HandleCors` nativo restrito a `http://localhost:4200`; `storage/tarefas.json` e `CorsMiddleware` custom removidos.
+- [x] Frontend: `interface Todo` em todo o fluxo (zero `any`); `TodoService` tipado; `provideHttpClient(withFetch())`; environments; componentização + signals imutáveis + OnPush + `inject()` + `takeUntilDestroyed`; `@if/@for` (track) + `@empty`; SCSS responsivo mobile-first; erro real (loading/erro/vazio) **sem** dados fake.
+- [x] Infra: docker path coerente (`/var/www`, `/app`) com hot-reload; `pdo_sqlite` compilado; CI verde (backend + frontend) no commit de entrega; Pint `--test` verde.
+- [x] Testes woven verdes: PHPUnit Feature (CRUD + 422 + 404 + toggle) e specs Angular (TodoService via HttpTestingController + 1 componente).
+- [x] E2E manual do gate final passa (persistência, erro real, 320px, CORS restrito, `@empty`).
+- [x] README completo e verdadeiro (dogfood de clone limpo); `DECISIONS.md` reconciliado; diário atualizado; commits semânticos; repositório público sem segredos.
+- [x] App funcionando ao fim de **cada** fase (por camada quando a integração no navegador estiver temporariamente vermelha entre Fase 1 e Fase 2).
 
 ## Mapa achado → fase
 

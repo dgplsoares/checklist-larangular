@@ -71,3 +71,32 @@
 - **B2:** CI GitHub Actions **verde** (backend `php artisan test`; frontend `ng test` via `karma.conf.js`/`ChromeHeadlessCI` + `ng build`). Descoberta: o builder do Angular 17 não auto-carrega `karma.conf.js` → precisa `karmaConfig` no `angular.json`.
 - **B3:** Pint = 36 files clean (código já no padrão) → gate `pint --test` adicionado ao CI. CI verde no push (run 29068738287).
 - Prettier/ESLint no front: deixado como **próximos passos** (right-sizing). Aviso do CI sobre `checkout@v4`/Node 20 é cosmético.
+
+## Fase 4 — README de entrega  [concluída]
+
+**Reanálise pré-fase (gate bloqueante):** confrontar **cada um dos 16 achados** com o código já refatorado antes de escrever o README — todos confirmados no "depois" (`bootstrap/app.php` com `api:`, `apiResource`, Model+SQLite, `config/cors.php` restrito, front com `provideHttpClient(withFetch())`/`apiUrl`). Reconciliar `DECISIONS.md`.
+
+**Progresso/fechamento:**
+- README de entrega escrito com: **Stack e bibliotecas** (framing honesto — a stack Angular+PHP era imposta; as escolhas *dentro* dela, banco/teste/lint/CI, foram deliberadas), **Como rodar** (duas vias, pré-requisitos **por opção** — deixa claro que não é preciso instalar tudo), **Arquitetura e decisões** (DEC-001/002/003), **tabela antes→depois** (16 achados), **Testes & CI**, **Uso de IA e SDD**, **próximos passos**.
+- Enunciado original preservado em **`DESAFIO.md`** (`git mv README.md DESAFIO.md`) e linkado no novo README.
+- **Precisão de versão** revisada: sem `httpResource`/`resource()` (v19+); `HttpClientModule` **não** rotulado `@deprecated` (só v18) — framado como "recomendado desde v15/16".
+- Zero referência a empresas/projetos externos; conteúdo puramente técnico.
+
+## Fase 5 — Verificação final (E2E conectado) + entrega  [concluída]
+
+**Reanálise pré-fase:** working tree limpo, Fases 1–4 no código; do zero via `docker compose up`; exercitar explicitamente L4 (PATCH), L7 (CORS restrito), A6 (`@empty`), A7 (320px), A8 (erro real).
+
+**Progresso/fechamento:**
+- **Reprodutibilidade provada** por clone limpo em `/tmp` + `docker compose up --build` **hands-off** (entrypoint cria `.env`/`APP_KEY`/sqlite e roda `migrate`) — `GET /api/tarefas` responde sem nenhum passo manual.
+- Smoke API: 200/201/**422**/**404**/204 + **preflight OPTIONS restrito a `http://localhost:4200` com PATCH** (cerne do L7). E2E UI: listar, criar (persiste após reload), 422 no título vazio, **concluir via PATCH** (L4), remover, **remover todas → `@empty`** (A6). Erro real com `docker compose stop laravel` — mensagem real, **sem** dados fake (A8), recupera no retry. Responsividade 320/768px sem overflow (A7).
+- `php artisan test` verde; suite front headless verde no CI; **CI verde**. Commits semânticos por fase/achado.
+- **Repositório tornado público** (via `gh api PATCH .../visibility=public`); confirmado que **nenhum `.env`/`APP_KEY`** foi versionado (`.gitignore` + histórico limpo).
+
+**Revisão final adversarial (papel de avaliador, relendo o `DESAFIO.md`):**
+- **Método:** workflow de subagentes gerando achados independentes → verificação adversarial → só gaps **reais** (sem forçar melhorias). **11 pontos levantados → 5 confirmados**, nenhum crítico/alto.
+- **M1 (médio)** — `AppComponent` (orquestrador de estado/erro) sem teste → adicionado **`app.component.spec.ts`** (8 specs: load sucesso/erro, add prepend/erro, **toggle otimista/rollback**, remove/erro). Suite front **10 → 18**.
+- **B1 (baixo)** — resíduos de scaffold no `index.html` (`<title>MyApp</title>`, `lang="en"`) → `lang="pt-BR"` + `<title>Lista de Tarefas</title>` (WCAG 3.1.1 + coerência pt-BR).
+- **B2 (baixo)** — checkbox dessincronizado do dado após falha no toggle → `onToggle` **otimista com rollback** (`replaceTodo`): reflete no clique, reverte no erro.
+- **B3 (baixo)** — bloco "Testes" do README quebrava se copiado inteiro (`cd`s encadeados) → **subshells** `(cd backend && …)` / `(cd frontend && …)`.
+- Melhorias do README aprovadas e aplicadas em paralelo (destaque a Testes/CI + Pint como gate de integridade do padrão Laravel; seção **"Além dos critérios"**).
+- **Nenhum dos 16 achados reaberto**; a revisão elevou uma entrega já sólida. **Entrega concluída.**
