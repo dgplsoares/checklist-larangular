@@ -26,30 +26,30 @@ Refactor **contract-first horizontal** (DEC-003): estabiliza-se o backend inteir
 **Achados cobertos:** Laravel 1 (registro de rotas / `api:` no `bootstrap/app.php`), Laravel 2 (rotas inline + falta `PUT/PATCH` + `DELETE` 204 fantasma), Laravel 3 (FormRequests / validação), Laravel 4 (Controller), Laravel 5 (Model + migration / persistência), Laravel 6 (API Resource), Laravel 7 (CORS restrito).
 
 **Tarefas:**
-- [ ] `[cmd]` Preparar ambiente (repo sem `vendor/` e sem `.env`): `composer install`, `cp .env.example .env`, `php artisan key:generate`, `touch database/database.sqlite`.
-- [ ] `[cmd]` **`php artisan install:api --force --without-migration-prompt`** — o `--force` é **obrigatório** porque `routes/api.php` já existe; sem ele o comando imprime "API routes file already exists." e **NÃO** insere `api:` no `bootstrap/app.php` (o achado L1 ficaria aberto). Alternativa equivalente: adicionar manualmente `api: __DIR__.'/../routes/api.php',` no `withRouting`. Sanctum entra instalado e ocioso (documentar no README; auth fora de escopo).
-- [ ] `[edição]` Limpar `routes/web.php`: remover `require __DIR__.'/api.php'`, deixar só a rota web `/`.
-- [ ] `[cmd]` `php artisan make:model Tarefa -mf` (Model + migration + factory).
-- [ ] `[edição]` Migration `create_tarefas_table`: `id()`, `string('title')`, `boolean('completed')->default(false)`, `timestamps()` (o `id()` auto-increment elimina a race do `max(id)+1`).
-- [ ] `[edição]` Model `Tarefa`: `$fillable = ['title','completed']`, `casts() => ['completed' => 'boolean']`; **preservar o trait `HasFactory`** do stub (senão `Tarefa::factory()` quebra).
-- [ ] `[edição]` `TarefaFactory`: `title => fake()->sentence()`, `completed => fake()->boolean()`.
-- [ ] `[cmd]` `php artisan make:request StoreTarefaRequest` e `php artisan make:request UpdateTarefaRequest`.
-- [ ] `[edição]` `StoreTarefaRequest`: `authorize() => true`; rules `title => required|string|max:255`, `completed => sometimes|boolean` (fecha o default silencioso → 422 sem title).
-- [ ] `[edição]` `UpdateTarefaRequest`: `authorize() => true`; rules `title => sometimes|required|string|max:255`, `completed => sometimes|boolean` (permite PATCH parcial / toggle só de `completed`).
-- [ ] `[cmd]` `php artisan make:resource TarefaResource`.
-- [ ] `[edição]` `TarefaResource->toArray()`: `id`, `title`, `completed => (bool) $this->completed`, `created_at`, `updated_at`.
-- [ ] `[cmd]` `php artisan make:controller TarefaController --api --model=Tarefa`.
-- [ ] `[edição]` `TarefaController` fino: `index` → `TarefaResource::collection(Tarefa::latest()->get())`; `store(StoreTarefaRequest)` → `new TarefaResource(Tarefa::create($request->validated()))` com 201; `show(Tarefa)`; `update(UpdateTarefaRequest, Tarefa)` → `$tarefa->update(...)` (atende PUT **e** PATCH/toggle); `destroy(Tarefa)` → `delete()` + `noContent()` (204). O Route Model Binding gera 404 automático.
-- [ ] `[edição]` Reescrever `routes/api.php`: remover `lerTarefas`/`salvarTarefas` e todas as closures; `use App\Http\Controllers\TarefaController;` + `Route::apiResource('tarefas', TarefaController::class)` (o `apiResource` já registra `update` como `PUT|PATCH`).
-- [ ] `[cmd]` `php artisan config:publish cors`.
-- [ ] `[edição]` `config/cors.php`: `paths => ['api/*']`, `allowed_origins => ['http://localhost:4200']`, `supports_credentials => false` (o default publicado vem com `['*']`).
-- [ ] `[edição]` Remover o append do `CorsMiddleware` custom do `bootstrap/app.php` (o `HandleCors` nativo já roda na pilha global e trata o preflight OPTIONS antes do router).
-- [ ] `[cmd]` `git rm app/Http/Middleware/CorsMiddleware.php` e `git rm storage/tarefas.json` (ambos rastreados).
-- [ ] `[edição]` `phpunit.xml`: descomentar/definir `DB_CONNECTION=sqlite` e `DB_DATABASE=:memory:` (suite hermética com `RefreshDatabase`, sem tocar o banco de dev).
-- [ ] `[cmd]` `php artisan migrate` (cria a tabela `tarefas` no `database/database.sqlite`).
-- [ ] `[teste]` `tests/Feature/TarefaTest.php` com `RefreshDatabase`: index (200 + estrutura), store válido (201 + `assertDatabaseHas`), store sem title (422 em `title`), update/PUT (200 + title alterado), toggle PATCH (200 + boolean invertido no BD), destroy (204 + `assertDatabaseMissing`), destroy inexistente (404). Remover os `ExampleTest` (Feature e Unit) do scaffold — o Feature faz `GET '/'` e quebraria no CI api-only.
-- [ ] `[teste]` `php artisan test` — suite verde (incluindo 422 e 404).
-- [ ] `[verificação]` `php artisan serve` + curl: GET (200), POST (201), POST sem title (422), PATCH toggle (200), DELETE (204), DELETE inexistente (404), OPTIONS preflight com `Origin: http://localhost:4200` (2xx + `Access-Control-Allow-Origin: http://localhost:4200`; origem não listada não recebe o header). Usar **`-H 'Accept: application/json'`** nos casos 404/422 (senão volta HTML/redirect).
+- [x] `[cmd]` Preparar ambiente (repo sem `vendor/` e sem `.env`): `composer install`, `cp .env.example .env`, `php artisan key:generate`, `touch database/database.sqlite`.
+- [x] `[cmd]` **`php artisan install:api --force --without-migration-prompt`** — o `--force` é **obrigatório** porque `routes/api.php` já existe; sem ele o comando imprime "API routes file already exists." e **NÃO** insere `api:` no `bootstrap/app.php` (o achado L1 ficaria aberto). Alternativa equivalente: adicionar manualmente `api: __DIR__.'/../routes/api.php',` no `withRouting`. Sanctum entra instalado e ocioso (documentar no README; auth fora de escopo).
+- [x] `[edição]` Limpar `routes/web.php`: remover `require __DIR__.'/api.php'`, deixar só a rota web `/`.
+- [x] `[cmd]` `php artisan make:model Tarefa -mf` (Model + migration + factory).
+- [x] `[edição]` Migration `create_tarefas_table`: `id()`, `string('title')`, `boolean('completed')->default(false)`, `timestamps()` (o `id()` auto-increment elimina a race do `max(id)+1`).
+- [x] `[edição]` Model `Tarefa`: `$fillable = ['title','completed']`, `casts() => ['completed' => 'boolean']`; **preservar o trait `HasFactory`** do stub (senão `Tarefa::factory()` quebra).
+- [x] `[edição]` `TarefaFactory`: `title => fake()->sentence()`, `completed => fake()->boolean()`.
+- [x] `[cmd]` `php artisan make:request StoreTarefaRequest` e `php artisan make:request UpdateTarefaRequest`.
+- [x] `[edição]` `StoreTarefaRequest`: `authorize() => true`; rules `title => required|string|max:255`, `completed => sometimes|boolean` (fecha o default silencioso → 422 sem title).
+- [x] `[edição]` `UpdateTarefaRequest`: `authorize() => true`; rules `title => sometimes|required|string|max:255`, `completed => sometimes|boolean` (permite PATCH parcial / toggle só de `completed`).
+- [x] `[cmd]` `php artisan make:resource TarefaResource`.
+- [x] `[edição]` `TarefaResource->toArray()`: `id`, `title`, `completed => (bool) $this->completed`, `created_at`, `updated_at`.
+- [x] `[cmd]` `php artisan make:controller TarefaController --api --model=Tarefa`.
+- [x] `[edição]` `TarefaController` fino: `index` → `TarefaResource::collection(Tarefa::latest()->get())`; `store(StoreTarefaRequest)` → `new TarefaResource(Tarefa::create($request->validated()))` com 201; `show(Tarefa)`; `update(UpdateTarefaRequest, Tarefa)` → `$tarefa->update(...)` (atende PUT **e** PATCH/toggle); `destroy(Tarefa)` → `delete()` + `noContent()` (204). O Route Model Binding gera 404 automático.
+- [x] `[edição]` Reescrever `routes/api.php`: remover `lerTarefas`/`salvarTarefas` e todas as closures; `use App\Http\Controllers\TarefaController;` + `Route::apiResource('tarefas', TarefaController::class)` (o `apiResource` já registra `update` como `PUT|PATCH`).
+- [x] `[cmd]` `php artisan config:publish cors`.
+- [x] `[edição]` `config/cors.php`: `paths => ['api/*']`, `allowed_origins => ['http://localhost:4200']`, `supports_credentials => false` (o default publicado vem com `['*']`).
+- [x] `[edição]` Remover o append do `CorsMiddleware` custom do `bootstrap/app.php` (o `HandleCors` nativo já roda na pilha global e trata o preflight OPTIONS antes do router).
+- [x] `[cmd]` `git rm app/Http/Middleware/CorsMiddleware.php` e `git rm storage/tarefas.json` (ambos rastreados).
+- [x] `[edição]` `phpunit.xml`: descomentar/definir `DB_CONNECTION=sqlite` e `DB_DATABASE=:memory:` (suite hermética com `RefreshDatabase`, sem tocar o banco de dev).
+- [x] `[cmd]` `php artisan migrate` (cria a tabela `tarefas` no `database/database.sqlite`).
+- [x] `[teste]` `tests/Feature/TarefaTest.php` com `RefreshDatabase`: index (200 + estrutura), store válido (201 + `assertDatabaseHas`), store sem title (422 em `title`), update/PUT (200 + title alterado), toggle PATCH (200 + boolean invertido no BD), destroy (204 + `assertDatabaseMissing`), destroy inexistente (404). Remover os `ExampleTest` (Feature e Unit) do scaffold — o Feature faz `GET '/'` e quebraria no CI api-only.
+- [x] `[teste]` `php artisan test` — suite verde (incluindo 422 e 404).
+- [ ] `[verificação]` Smoke manual (`php artisan serve` + curl + preflight OPTIONS/CORS) — **deferido à Fase 5 (E2E)**. Os status 200/201/422/404/204 + PATCH toggle já ficam provados pelos feature tests acima; a origem restrita do CORS (não `*`) é revalidada no gate E2E da Fase 5.
 
 **Comandos a executar:** `composer install` · `cp .env.example .env` · `php artisan key:generate` · `touch database/database.sqlite` · `php artisan install:api --force --without-migration-prompt` · `php artisan make:model Tarefa -mf` · `php artisan make:request StoreTarefaRequest` · `php artisan make:request UpdateTarefaRequest` · `php artisan make:resource TarefaResource` · `php artisan make:controller TarefaController --api --model=Tarefa` · `php artisan config:publish cors` · `git rm app/Http/Middleware/CorsMiddleware.php` · `git rm storage/tarefas.json` · `php artisan migrate` · `php artisan test`
 
@@ -73,39 +73,16 @@ Refactor **contract-first horizontal** (DEC-003): estabiliza-se o backend inteir
 
 **Achados cobertos:** Angular 1 (`provideHttpClient(withFetch())`, remove `HttpClientModule`), Angular 2 (`src/environments/` com `apiUrl`), Angular 3 (`interface Todo`), Angular 4 (`TodoService` tipado), Angular 5 (raiz fino + signals + OnPush + `inject()` + `takeUntilDestroyed`), Angular 6 (`@if/@for` com `track` + `@empty` + `[class.completed]`), Angular 7 (SCSS escopado responsivo, tokens no `:root`), Angular 8 (erro real, sem dados fake).
 
-**Tarefas:**
-- [ ] `[cmd]` `ng generate environments` (cria `src/environments/` + `fileReplacements` no `angular.json`).
-- [ ] `[edição]` `environment.development.ts` → `{ apiUrl: 'http://localhost:8000/api/tarefas' }` (dev cross-port precisa de URL absoluta); `environment.ts` (produção, default) → `{ apiUrl: '/api/tarefas' }` (relativa, atrás de proxy).
-- [ ] `[edição]` `app.config.ts`: adicionar `provideHttpClient(withFetch())` aos providers (mantendo `provideRouter`); import de `@angular/common/http`.
-- [ ] `[edição]` `models/todo.model.ts`: `export interface Todo { id: number; title: string; completed: boolean }` (espelha o `TarefaResource`).
-- [ ] `[cmd]` `ng generate service todo`.
-- [ ] `[edição]` `TodoService`: `inject(HttpClient)`; `private apiUrl = environment.apiUrl`; `getTodos(): Observable<Todo[]>` (GET); `addTodo(title: string): Observable<Todo>` (POST `{ title }`); `toggleTodo(todo: Todo): Observable<Todo>` (PATCH `${apiUrl}/${todo.id}` com `{ completed: !todo.completed }`); `removeTodo(id: number): Observable<void>` (DELETE). Zero `any`. **(Não exigir "HttpClient removido do AppComponent" aqui — isso é da tarefa do `AppComponent`; até lá o `HttpClientModule` redundante coexiste inofensivo.)**
-- [ ] `[cmd]` `ng generate component todo-form`, `ng generate component todo-list`, `ng generate component todo-item`.
-- [ ] `[edição]` `TodoItemComponent`: `todo = input.required<Todo>()`; `toggle = output<Todo>()`; `remove = output<number>()`; `<input type="checkbox" [checked]="todo().completed" (change)="toggle.emit(todo())">`; `[class.completed]="todo().completed"`; OnPush. **Nota:** o checkbox/toggle é **capacidade nova** que consome o PATCH da Fase 1 (completa a metade já modelada por `completed`) — documentar como feature adicionada; hard-depende do `TarefaResource` devolver exatamente `{id,title,completed}`.
-- [ ] `[edição]` `TodoListComponent`: `todos = input.required<Todo[]>()`; `@for (todo of todos(); track todo.id) { <app-todo-item .../> } @empty { 'Nenhuma tarefa encontrada' }`; repassa `toggle`/`remove`; OnPush.
-- [ ] `[edição]` `TodoFormComponent`: `add = output<string>()`; `title.trim()`, ignora vazio, emite e limpa o campo; OnPush.
-- [ ] `[edição]` `AppComponent` fino: `private service = inject(TodoService)`; **`private destroyRef = inject(DestroyRef)`** (import `DestroyRef` de `@angular/core`); `todos = signal<Todo[]>([])`, `loading = signal(true)`, `error = signal<string|null>(null)`; OnPush; `ngOnInit` → `service.getTodos().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next, error })` **sem inventar "Tarefa offline"**; `onAdd/onToggle/onRemove` com `todos.update(list => [...])` imutável, **sem** `push`/`fakeTodo`/`Math.random`; **aqui** sim removem-se `HttpClientModule`/`HttpClient` e imports não usados.
-- [ ] `[edição]` `app.component.html`: `<app-todo-form (add)="onAdd($event)"/>`; `@if (loading()) {…} @else if (error()) { erro + retry } @else { <app-todo-list [todos]="todos()" (toggle)="onToggle($event)" (remove)="onRemove($event)"/> }`; sem `style=` inline, sem `*ngIf/*ngFor`.
-- [ ] `[edição]` Estilos: tokens no `:root` em `styles.scss`; SCSS escopado mobile-first sem larguras fixas em px (max-width + `%`/`rem`/`clamp`); `[class.completed]` → line-through; cada SCSS de componente `< 4kb` (budget `anyComponentStyle`).
-- [ ] `[cmd]` `ng g @angular/core:control-flow` (rede de segurança, migra `*ngIf/*ngFor` remanescentes).
-- [ ] `[teste]` `todo.service.spec.ts` com `HttpTestingController`: GET em `apiUrl`, POST `{ title }`, PATCH `${apiUrl}/${id}` `{ completed }`, DELETE; `expectOne` + `flush` + `afterEach` `verify()`.
-- [ ] `[teste]` `todo-form.component.spec.ts`: submeter título válido emite `add` (trim); submeter vazio **não** emite. (Alternativa: `todo-item` emitindo `toggle` no checkbox.)
-- [ ] `[verificação]` `ng test --watch=false --browsers=ChromeHeadless` — 0 falhas.
-- [ ] `[verificação]` `ng build` sem estouro de budget; E2E manual vs. backend da Fase 1: lista carrega de `/api/tarefas`, criar persiste, checkbox dispara PATCH e persiste após reload, remover apaga; backend down → estado de erro real **sem** "Tarefa offline"/fantasmas; estados loading/vazio corretos. Confirmar que a build de produção usa `apiUrl` relativo **por design** (não interpretar como quebra).
+> **Detalhamento completo (tasks, comandos, critério, riscos): [roadmap-fase2-frontend.md](roadmap-fase2-frontend.md).**
 
-**Comandos a executar:** `ng generate environments` · `ng generate service todo` · `ng generate component todo-form` · `ng generate component todo-list` · `ng generate component todo-item` · `ng g @angular/core:control-flow` · `ng test --watch=false --browsers=ChromeHeadless` · `ng build`
+**Blocos (tracking):**
+- [ ] **B1 — Base:** `npm ci`, `ng generate environments` (`apiUrl` → `/api/tarefas`), `provideHttpClient(withFetch())`, `interface Todo` (A1/A2/A3)
+- [ ] **B2 — Service:** `TodoService` tipado — GET/POST/PATCH/DELETE (A4)
+- [ ] **B3 — Componentes:** form/list/item + `AppComponent` fino (signals + OnPush + `inject()` + `takeUntilDestroyed`) (A5/A1)
+- [ ] **B4 — Template/estilos/erro:** `@if/@for` (track) + `@empty` + `[class.completed]`, SCSS responsivo, erro real sem dados fake (A6/A7/A8)
+- [ ] **B5 — Specs + verificação:** `TodoService` (HttpTestingController) + componente; `ng test`/`ng build`; E2E manual vs. backend
 
-**Critério de aceite:** (1) `ng test` verde (spec do TodoService validando GET/POST/PATCH/DELETE em `/api/tarefas` + spec de 1 componente); (2) fluxo E2E manual vs. backend — listar/adicionar/concluir(PATCH, persiste após reload)/remover; (3) backend down → erro real, sem dados fake, com loading/erro/vazio distintos; (4) `ng build` produção sem erro/budget; (5) zero `any` (interface `Todo` em todo o fluxo), `HttpClientModule` trocado por `provideHttpClient(withFetch())`, sem `*ngIf/*ngFor` nem estilos inline, estado em signal imutável com OnPush + `inject()` + `takeUntilDestroyed`.
-
-**Riscos:**
-- **Dependência do contrato da Fase 1:** se o Resource renomear campos (`titulo`/`concluida`), o binding da `interface Todo` quebra silenciosamente; o toggle depende de o backend expor `PATCH /api/tarefas/{id}`.
-- CORS/preflight: PATCH/POST com JSON disparam OPTIONS; o `config/cors.php` da Fase 1 precisa permitir PATCH e a origem `:4200`. Falha só aparece no browser (curl ignora CORS).
-- Prefixo `/api`: esquecer o `/api` reproduz 404; em dev (4200 vs 8000) a `apiUrl` precisa ser **absoluta**.
-- `fileReplacements` só entra na config `development`; `ng build` (default production) usa `environment.ts`.
-- `@for` exige `track` obrigatório — usar `track todo.id`, não `$index` (evita re-render/perda de foco).
-- `takeUntilDestroyed` deve ser chamado em contexto de injeção (campo/constructor) **ou** receber um `DestroyRef` explícito — chamá-lo solto em `ngOnInit` lança em runtime.
-- Só remover `HttpClientModule` do `AppComponent` **depois** de `provideHttpClient` estar nos providers.
-- `resource()/httpResource` **não existem no 17.3** (v19+): usar signal writable + subscribe (não `toSignal` over-engineered) para a lista mutável.
+**Critério de aceite (resumo):** `ng test` verde; E2E manual (listar/criar/concluir-PATCH/remover) contra o backend; erro real sem dados fake; `ng build` ok; zero `any`, sem `HttpClientModule`/`*ngIf`/`*ngFor`/estilos inline. (Detalhe no doc dedicado.)
 
 ---
 
