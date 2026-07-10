@@ -66,16 +66,26 @@ export class AppComponent implements OnInit {
 
   onToggle(todo: Todo): void {
     this.actionError.set(null);
+    // Atualização otimista: o checkbox nativo já mudou de posição no clique, então
+    // refletimos o novo estado na hora e revertemos se o servidor falhar (evita o
+    // checkbox ficar dessincronizado do dado).
+    this.replaceTodo({ ...todo, completed: !todo.completed });
     this.service
       .toggleTodo(todo)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (updated) =>
-          this.todos.update((list) =>
-            list.map((item) => (item.id === updated.id ? updated : item)),
-          ),
-        error: () => this.actionError.set('Não foi possível atualizar a tarefa.'),
+        next: (updated) => this.replaceTodo(updated),
+        error: () => {
+          this.replaceTodo(todo); // rollback ao estado anterior
+          this.actionError.set('Não foi possível atualizar a tarefa.');
+        },
       });
+  }
+
+  private replaceTodo(todo: Todo): void {
+    this.todos.update((list) =>
+      list.map((item) => (item.id === todo.id ? todo : item)),
+    );
   }
 
   onRemove(id: number): void {
