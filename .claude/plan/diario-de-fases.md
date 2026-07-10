@@ -54,3 +54,14 @@
 - **`withFetch()` fora do teste:** `provideHttpClient(withFetch())` fura o `HttpTestingController` (vai à rede real) → usar `provideHttpClient()` + `provideHttpClientTesting()`.
 - `npm audit`: 73 vulnerabilidades (deps transitivas do Angular 17.3) — revisar no README (próximos passos).
 - **Achados fechados:** Angular 1–8.
+
+## Fase 3 — Infra / DX / CI  [em andamento]
+
+**Reanálise pré-fase:** `docker-compose.yml` com `version` obsoleto e path descasado nos **dois** serviços (laravel `/backend`≠`/var/www`; angular `/frontend`≠`/app` — gêmeo do Infra 1, não documentado no achado). Sem `.github`. Pint disponível; a Fase 1 já resolveu `pdo_sqlite` + `phpunit.xml` (DB `:memory:`).
+
+**Ajustes ao plano (no `roadmap-master.md`, Fase 3):**
+- Install **condicional** no boot (`[ -d vendor ] || composer install`; `[ -d node_modules ] || npm ci`) — clone limpo funciona sem reinstalar à toa.
+- Corrigir o gêmeo do Infra 1 no frontend (WORKDIR `/app` + command com `npm ci` condicional).
+- Entrypoint roda como root → arquivos root-owned (ok pro avaliador; dev usa `docker compose run` + chown).
+
+**Mini-roadmap:** (1) docker path coerente + `docker-entrypoint.sh` + verificar `up --build`; (2) CI GitHub Actions (backend + frontend) + `karma.conf.js` (`ChromeHeadlessCI`); (3) Pint (Prettier/ESLint opcional). Tracking detalhado na Fase 3 do `roadmap-master.md`.
