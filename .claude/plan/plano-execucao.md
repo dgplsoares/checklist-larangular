@@ -1,41 +1,15 @@
 # Plano de Execução — Refatoração Checklist
 
-> Fases da refatoração. O detalhamento por fase (tarefas, checklists, ordem de
-> execução) é produzido na análise/planejamento amplo (roadmap master) — próxima etapa.
-> Achados que originam o trabalho: `.claude/docs/analise-preliminar.md`.
+> Índice das fases. O **detalhamento** (tarefas, comandos, critério de aceite, riscos)
+> está em `.claude/plan/roadmap-master.md`. Achados: `.claude/docs/analise-preliminar.md`.
+> Fluxo de execução: **DEC-003** (contract-first, testes woven, gate E2E no fim).
 
 ## Fases
 
-### Fase 1 — Backend (Laravel)
-Objetivo: sair do arquivo JSON para persistência real e camadas idiomáticas.
-Escopo: Model + migration (SQLite), Controller, FormRequest, API Resource, rotas `/api`
-(grupo `api`), endpoint de atualização (`PATCH`) para concluir tarefa, 404/422 corretos,
-CORS nativo. Cobre os achados **Laravel 1–7**.
+1. **Backend (Laravel) + feature tests** — contrato da API sob `/api`, SQLite/Eloquent, `PATCH` toggle, 404/422, CORS restrito. Fecha **Laravel 1–7**.
+2. **Frontend (Angular) + specs** — `interface Todo`, `TodoService`, `provideHttpClient`, environments, componentização, signals + OnPush, `@if/@for`, SCSS responsivo, erro real. Consome o contrato da Fase 1. Fecha **Angular 1–8**.
+3. **Infra / DX / CI** — docker path coerente (`/var/www`, `/app`), Dockerfiles, CI (GitHub Actions), lint. Fecha **Infra 1**.
+4. **README de entrega** — stack, decisões (via `DECISIONS.md`), tabela antes→depois, como rodar, IA/SDD, próximos passos.
+5. **Verificação final (E2E conectado) + entrega** — smoke do zero, fluxos reais (concluir/L4, responsivo/A7, erro real/A8, CORS restrito/L7, `@empty`/A6), commits semânticos, repositório público.
 
-### Fase 2 — Frontend (Angular)
-Objetivo: sair do God Component para arquitetura standalone moderna.
-Escopo: `interface Todo`, `TodoService`, `provideHttpClient`, environments,
-componentização, signals + OnPush + `inject()`, control flow `@if/@for`, SCSS
-responsivo, tratamento de erro real. Cobre os achados **Angular 1–8**.
-
-### Fase 3 — Testes
-Objetivo: rede de segurança e critério de aceite.
-Escopo: PHPUnit feature (CRUD + 422 + 404 + toggle) no backend; specs de service e de
-componente no frontend.
-
-### Fase 4 — Infra / DX
-Objetivo: reprodutibilidade e qualidade contínua.
-Escopo: corrigir `docker-compose`/Dockerfiles (achado **Infra 1**), CI (GitHub Actions),
-lint (Pint no PHP, Prettier/ESLint no Angular).
-
-### Fase 5 — README de entrega
-Objetivo: comunicar tecnologias, decisões de arquitetura, antes→depois, como rodar,
-uso de IA/SDD e próximos passos.
-
-### Fase 6 — Verificação final e entrega
-Objetivo: subir do zero, exercitar os fluxos (incluindo responsivo), commits semânticos
-e tornar o repositório público.
-
-## Detalhamento por fase
-
-> _(A ser preenchido na análise/planejamento amplo — roadmap master.)_
+> A antiga "Fase 3 — Testes" separada foi **dissolvida** (testes tecidos nas Fases 1 e 2), conforme **DEC-003**.
