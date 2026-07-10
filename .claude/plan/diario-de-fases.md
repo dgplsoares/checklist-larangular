@@ -36,3 +36,21 @@
 - Sanctum instalado por `install:api` e **ocioso** (migration `personal_access_tokens` roda mas sem uso) — auth fora de escopo; documentar no README.
 - `composer audit` reportou 24 advisories (deps do lock) — revisar na Fase 3/README.
 - **Achados fechados:** Laravel 1–7 (L1 rotas `/api` · L2 controller · L3 validação · L4 PATCH/gap · L5 Model+SQLite · L6 Resource · L7 CORS restrito).
+
+## Fase 2 — Frontend (Angular) + specs  [concluída]
+
+**Reanálise pré-fase:** dev loop **local** (Node 20, sem Docker/root); contrato mudou p/ `/api/tarefas` (prefixo da Fase 1); ordem crítica signal→OnPush; `destroyRef` p/ `takeUntilDestroyed`. Detalhamento no doc dedicado `roadmap-fase2-frontend.md`.
+
+**Progresso (blocos):**
+- **B1 — Base:** `npm ci`, `ng generate environments` (apiUrl `/api/tarefas`, absoluta em dev), `provideHttpClient(withFetch())`, `interface Todo`.
+- **B2 — Service:** `TodoService` tipado (GET/POST/PATCH/DELETE), com **unwrap do envelope `data`** (API Resource).
+- **B3 — Componentes:** `todo-form`/`todo-list`/`todo-item` (signal `input()/output()`, OnPush) + `AppComponent` fino (signals, `inject`, `takeUntilDestroyed`, updates imutáveis, sem `HttpClientModule`/dados falsos). Build verde.
+- **B4 — Template/estilos:** `@if/@for track`/`@empty`, `[class.completed]`, SCSS responsivo (tokens `:root`, `clamp`, sem px fixo), erro real (carga com retry; erro de ação sem apagar a lista).
+- **B5 — Specs + E2E:** 10 testes verdes (service via `HttpTestingController` + 3 componentes) + E2E manual (7 checks) validado.
+
+**Descobertas/decisões:**
+- Respostas do backend vêm **envelopadas em `data`** (API Resource) → o service desembrulha (`map(r => r.data)`). Detalhe que o contract-first fez aparecer na hora certa.
+- Specs stub do `ng generate component` **quebram** com `input.required()` sem valor → reescritos com `fixture.componentRef.setInput`.
+- **`withFetch()` fora do teste:** `provideHttpClient(withFetch())` fura o `HttpTestingController` (vai à rede real) → usar `provideHttpClient()` + `provideHttpClientTesting()`.
+- `npm audit`: 73 vulnerabilidades (deps transitivas do Angular 17.3) — revisar no README (próximos passos).
+- **Achados fechados:** Angular 1–8.

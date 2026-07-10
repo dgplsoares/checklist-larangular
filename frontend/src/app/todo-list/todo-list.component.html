@@ -1,0 +1,13 @@
+<ul class="todo-list">
+  @for (todo of todos(); track todo.id) {
+    <li class="todo-list__item">
+      <app-todo-item
+        [todo]="todo"
+        (toggle)="toggle.emit($event)"
+        (remove)="remove.emit($event)"
+      />
+    </li>
+  } @empty {
+    <li class="todo-list__empty">Nenhuma tarefa encontrada.</li>
+  }
+</ul>

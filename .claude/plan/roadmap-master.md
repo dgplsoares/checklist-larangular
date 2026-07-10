@@ -76,11 +76,11 @@ Refactor **contract-first horizontal** (DEC-003): estabiliza-se o backend inteir
 > **Detalhamento completo (tasks, comandos, critério, riscos): [roadmap-fase2-frontend.md](roadmap-fase2-frontend.md).**
 
 **Blocos (tracking):**
-- [ ] **B1 — Base:** `npm ci`, `ng generate environments` (`apiUrl` → `/api/tarefas`), `provideHttpClient(withFetch())`, `interface Todo` (A1/A2/A3)
-- [ ] **B2 — Service:** `TodoService` tipado — GET/POST/PATCH/DELETE (A4)
-- [ ] **B3 — Componentes:** form/list/item + `AppComponent` fino (signals + OnPush + `inject()` + `takeUntilDestroyed`) (A5/A1)
-- [ ] **B4 — Template/estilos/erro:** `@if/@for` (track) + `@empty` + `[class.completed]`, SCSS responsivo, erro real sem dados fake (A6/A7/A8)
-- [ ] **B5 — Specs + verificação:** `TodoService` (HttpTestingController) + componente; `ng test`/`ng build`; E2E manual vs. backend
+- [x] **B1 — Base:** `npm ci`, `ng generate environments` (`apiUrl` → `/api/tarefas`), `provideHttpClient(withFetch())`, `interface Todo` (A1/A2/A3)
+- [x] **B2 — Service:** `TodoService` tipado — GET/POST/PATCH/DELETE (A4)
+- [x] **B3 — Componentes:** form/list/item + `AppComponent` fino (signals + OnPush + `inject()` + `takeUntilDestroyed`) (A5/A1)
+- [x] **B4 — Template/estilos/erro:** `@if/@for` (track) + `@empty` + `[class.completed]`, SCSS responsivo, erro real sem dados fake (A6/A7/A8)
+- [x] **B5 — Specs + verificação:** `TodoService` (HttpTestingController) + componente; `ng test`/`ng build`; E2E manual vs. backend
 
 **Critério de aceite (resumo):** `ng test` verde; E2E manual (listar/criar/concluir-PATCH/remover) contra o backend; erro real sem dados fake; `ng build` ok; zero `any`, sem `HttpClientModule`/`*ngIf`/`*ngFor`/estilos inline. (Detalhe no doc dedicado.)
 

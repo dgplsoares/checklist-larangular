@@ -1,0 +1,14 @@
+<div class="todo-item" [class.completed]="todo().completed">
+  <label class="todo-item__main">
+    <input
+      type="checkbox"
+      class="todo-item__checkbox"
+      [checked]="todo().completed"
+      (change)="toggle.emit(todo())"
+    />
+    <span class="todo-item__title">{{ todo().title }}</span>
+  </label>
+  <button type="button" class="btn btn--danger" (click)="remove.emit(todo().id)">
+    Remover
+  </button>
+</div>

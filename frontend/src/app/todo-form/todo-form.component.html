@@ -1,0 +1,10 @@
+<form class="todo-form" (submit)="onSubmit(titleInput, $event)">
+  <input
+    #titleInput
+    type="text"
+    class="todo-form__input"
+    placeholder="Digite uma nova tarefa"
+    aria-label="Nova tarefa"
+  />
+  <button type="submit" class="btn btn--primary">Adicionar</button>
+</form>

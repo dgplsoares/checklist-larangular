@@ -1,72 +1,92 @@
-import { Component, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnInit,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+import { Todo } from './models/todo.model';
+import { TodoService } from './todo.service';
+import { TodoFormComponent } from './todo-form/todo-form.component';
+import { TodoListComponent } from './todo-list/todo-list.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, FormsModule, HttpClientModule],
+  imports: [TodoFormComponent, TodoListComponent],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  styleUrl: './app.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit {
-  title = 'Todo List';
-  todos: any[] = [];
-  newTodo: any = { title: '', completed: false };
-  apiUrl = 'http://localhost:8000/tarefas';
+  private readonly service = inject(TodoService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  constructor(private http: HttpClient) {}
+  readonly title = 'Lista de Tarefas';
+  readonly todos = signal<Todo[]>([]);
+  readonly loading = signal(true);
+  readonly error = signal<string | null>(null);
+  readonly actionError = signal<string | null>(null);
 
-  ngOnInit() {
-    this.http.get(this.apiUrl).subscribe(
-      (data: any) => {
-        this.todos = data;
-      },
-      (erro) => {
-        console.error('Erro ao carregar tarefas:', erro);
-        this.todos = [
-          { id: 1, title: 'Tarefa offline 1', completed: false },
-          { id: 2, title: 'Tarefa offline 2', completed: true }
-        ];
-      }
-    );
+  ngOnInit(): void {
+    this.loadTodos();
   }
 
-  addTodo() {
-    if (!this.newTodo.title.trim()) return;
-    
-    this.http.post(this.apiUrl, {
-      title: this.newTodo.title
-    }).subscribe(
-      (response: any) => {
-        this.todos.push(response);
-        
-        this.newTodo = { title: '', completed: false };
-      },
-      (erro) => {
-        console.error('Erro ao adicionar tarefa:', erro);
-        const fakeTodo = {
-          id: Math.floor(Math.random() * 1000),
-          title: this.newTodo.title,
-          completed: false
-        };
-        this.todos.push(fakeTodo);
-        this.newTodo = { title: '', completed: false };
-      }
-    );
+  loadTodos(): void {
+    this.loading.set(true);
+    this.error.set(null);
+    this.service
+      .getTodos()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (todos) => {
+          this.todos.set(todos);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.error.set('Não foi possível carregar as tarefas.');
+          this.loading.set(false);
+        },
+      });
   }
 
-  removeTodo(id: number) {
-    this.http.delete(`${this.apiUrl}/${id}`).subscribe(
-      () => {
-        this.todos = this.todos.filter(todo => todo.id !== id);
-      },
-      (erro) => {
-        console.error('Erro ao remover tarefa:', erro);
-        this.todos = this.todos.filter(todo => todo.id !== id);
-      }
-    );
+  onAdd(title: string): void {
+    this.actionError.set(null);
+    this.service
+      .addTodo(title)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (todo) => this.todos.update((list) => [todo, ...list]),
+        error: () => this.actionError.set('Não foi possível adicionar a tarefa.'),
+      });
+  }
+
+  onToggle(todo: Todo): void {
+    this.actionError.set(null);
+    this.service
+      .toggleTodo(todo)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updated) =>
+          this.todos.update((list) =>
+            list.map((item) => (item.id === updated.id ? updated : item)),
+          ),
+        error: () => this.actionError.set('Não foi possível atualizar a tarefa.'),
+      });
+  }
+
+  onRemove(id: number): void {
+    this.actionError.set(null);
+    this.service
+      .removeTodo(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () =>
+          this.todos.update((list) => list.filter((item) => item.id !== id)),
+        error: () => this.actionError.set('Não foi possível remover a tarefa.'),
+      });
   }
 }
